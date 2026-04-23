@@ -21,7 +21,7 @@ jobs:
       - name: Build & Push Image
         run: |
           IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/house-price-api:${{ github.sha }}
-          docker build -t $IMAGE .
+          docker build --no-cache -t $IMAGE .
           docker push $IMAGE
 
   deploy:
