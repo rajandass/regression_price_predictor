@@ -6,6 +6,8 @@ import json
 import logging
 from datetime import datetime
 import numpy as np
+import os
+from azure.storage.blob import BlobServiceClient
 
 # -----------------------------
 # Logging Setup
@@ -21,11 +23,26 @@ logging.basicConfig(
 # -----------------------------
 app = FastAPI(title="House Price Prediction API")
 
+def load_model_from_blob():
+    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+    blob_client = blob_service_client.get_blob_client(
+        container="models",
+        blob="model.pkl"
+    )
+
+    with open("model.pkl", "wb") as f:
+        f.write(blob_client.download_blob().readall())
+
+    return joblib.load("model.pkl")
+
 # -----------------------------
 # Load Model from MLflow Registry
 # -----------------------------
 # model = mlflow.pyfunc.load_model("models:/house-price-model/1")
-model = joblib.load("model.pkl") 
+model = load_model_from_blob() 
+
 
 # -----------------------------
 # Input Schema (Validation)
