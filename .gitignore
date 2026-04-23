@@ -27,3 +27,4 @@ Thumbs.db
 
 app.log
 monitoring_log.json
+env.json
