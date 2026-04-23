@@ -2,12 +2,15 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install dependencies first
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app
 
-# THEN copy app (forces rebuild when code changes)
-COPY app.py .
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    mlflow \
+    pandas \
+    numpy \
+    scikit-learn
 
 EXPOSE 8000
 

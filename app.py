@@ -1,19 +1,18 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import pandas as pd
-import joblib
 import json
 import logging
 from datetime import datetime
-import numpy as np
 import os
-from azure.storage.blob import BlobServiceClient
+import mlflow
+import numpy as np
 
+MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI")
 # -----------------------------
 # Logging Setup
 # -----------------------------
 logging.basicConfig(
-    filename="app.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -23,25 +22,25 @@ logging.basicConfig(
 # -----------------------------
 app = FastAPI(title="House Price Prediction API")
 
-def load_model_from_blob():
-    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
-    blob_client = blob_service_client.get_blob_client(
-        container="models",
-        blob="model.pkl"
-    )
-
-    with open("model.pkl", "wb") as f:
-        f.write(blob_client.download_blob().readall())
-
-    return joblib.load("model.pkl")
 
 # -----------------------------
 # Load Model from MLflow Registry
 # -----------------------------
 # model = mlflow.pyfunc.load_model("models:/house-price-model/1")
-model = load_model_from_blob() 
+
+
+if not MLFLOW_URI:
+    raise ValueError("MLFLOW_TRACKING_URI is not set")
+
+mlflow.set_tracking_uri(MLFLOW_URI)
+
+model = None
+def get_model():
+    global model
+    if model is None:
+         model = mlflow.pyfunc.load_model("models:/house-price-model@production")
+    return model
 
 
 # -----------------------------
@@ -71,12 +70,20 @@ def predict(request: HouseRequest):
     try:
         # Convert input to DataFrame
         data = pd.DataFrame([request.dict()])
+        data = data.astype({
+        "living_area": "int64",
+        "number_of_bedrooms": "int64",
+        "number_of_bathrooms": "float64",
+        "number_of_floors": "float64",
+        "grade_of_the_house": "int64",
+        "house_age": "int64",
+        "area_per_bedroom": "float64"
+        })
 
         # Predict (log scale)
-        prediction_log = model.predict(data)[0]
+        prediction_log = get_model().predict(data)[0]
 
         # Convert back to original price
-        import numpy as np
         prediction = float(np.expm1(prediction_log))
 
         # Round value
@@ -117,7 +124,7 @@ def predict(request: HouseRequest):
 
     except Exception as e:
         logging.error(f"ERROR | Input: {request.dict()} | Error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Prediction failed")
+        return {"error": str(e)}   # 👈 temporarily expose error
 
 @app.get("/logs")
 def get_logs():
