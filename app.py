@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import mlflow.pyfunc
 import pandas as pd
+import joblib
 
 # -----------------------------
 # App Init
@@ -11,7 +12,8 @@ app = FastAPI(title="House Price Prediction API")
 # -----------------------------
 # Load Model from MLflow Registry
 # -----------------------------
-model = mlflow.pyfunc.load_model("models:/house-price-model/1")
+# model = mlflow.pyfunc.load_model("models:/house-price-model/1")
+model = joblib.load("model.pkl") 
 
 # -----------------------------
 # Input Schema (Validation)

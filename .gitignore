@@ -1,19 +1,18 @@
 # Python
 __pycache__/
 *.pyc
-*.pyo
 
-# Virtual Environment
+# Virtual env
 venv/
-env/
 
 # MLflow
 mlruns/
 
-# Data files
+# Data
 *.csv
+house-price-dataset-of-india/
 
-# Model files
+# Models
 *.pkl
 
 # Logs
