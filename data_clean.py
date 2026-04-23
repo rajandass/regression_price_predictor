@@ -34,4 +34,4 @@ df = df.drop("built_year", axis=1)
 
 # ✅ SAVE CLEAN DATA HERE
 df.to_csv("house-price-dataset-of-india/clean_data.csv", index=False)
-print("Clean data saved!")
+print("Clean data saved! Shape:", df.shape)
