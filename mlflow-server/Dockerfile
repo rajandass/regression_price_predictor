@@ -8,7 +8,8 @@ EXPOSE 5000
 
 CMD ["sh", "-c", "mlflow server \
   --backend-store-uri sqlite:///mlflow.db \
-  --default-artifact-root $ARTIFACT_ROOT \
+  --artifacts-destination $ARTIFACT_ROOT \
+  --serve-artifacts \
   --host 0.0.0.0 \
   --port 5000 \
   --workers 1 \
