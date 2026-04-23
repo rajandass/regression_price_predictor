@@ -10,9 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    outputs:
-      image: ${{ steps.build.outputs.image }}
-
     steps:
       - uses: actions/checkout@v4
 
@@ -22,18 +19,15 @@ jobs:
           -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
       - name: Build & Push Image
-        id: build
         run: |
           IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/house-price-api:${{ github.sha }}
           docker build -t $IMAGE .
           docker push $IMAGE
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
-    environment: production   # 🔥 KEY (this enables approval)
+    environment: production
 
     steps:
       - name: Login to Azure
@@ -43,7 +37,9 @@ jobs:
 
       - name: Deploy to Azure
         run: |
+          IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/house-price-api:${{ github.sha }}
+          echo "Deploying $IMAGE"
           az containerapp update \
             --name house-price-api-app \
             --resource-group mlops-rg \
-            --image ${{ needs.build.outputs.image }}
+            --image $IMAGE
