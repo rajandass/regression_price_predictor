@@ -101,3 +101,16 @@ def predict(request: HouseRequest):
     except Exception as e:
         logging.error(f"ERROR | Input: {request.dict()} | Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Prediction failed")
+
+@app.get("/logs")
+def get_logs():
+    try:
+        with open("monitoring_log.json", "r") as f:
+            logs = f.readlines()
+
+        return {
+            "logs": logs[-10:]  # last 10 entries
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
