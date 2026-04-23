@@ -10,7 +10,9 @@ RUN pip install --no-cache-dir \
     mlflow \
     pandas \
     numpy \
-    scikit-learn
+    scikit-learn \
+    azure-storage-blob \
+    azure-identity
 
 EXPOSE 8000
 
