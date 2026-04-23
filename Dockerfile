@@ -8,7 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # THEN copy app (forces rebuild when code changes)
 COPY app.py .
-COPY model.pkl .
 
 EXPOSE 8000
 
