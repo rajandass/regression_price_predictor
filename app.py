@@ -1,8 +1,20 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-import mlflow.pyfunc
 import pandas as pd
 import joblib
+import json
+import logging
+from datetime import datetime
+import numpy as np
+
+# -----------------------------
+# Logging Setup
+# -----------------------------
+logging.basicConfig(
+    filename="app.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # -----------------------------
 # App Init
@@ -59,11 +71,33 @@ def predict(request: HouseRequest):
         # Indian format (lakhs)
         price_lakhs = round(prediction / 100000, 2)
 
-        return {
-            "predicted_price": prediction,
-            "formatted_price": f"₹{formatted_price}",
-            "price_in_lakhs": f"{price_lakhs} Lakhs"
+        response = {
+            "prediction": {
+                "value": rounded_price,
+                "currency": "INR",
+                "formatted": formatted_price,
+                "in_lakhs": f"{price_lakhs} Lakhs"
+            }
+        }
+        # -----------------------------
+        # Monitoring Log (JSON)
+        # -----------------------------
+        log_data = {
+            "timestamp": str(datetime.utcnow()),
+            "input": request.dict(),
+            "prediction": rounded_price
         }
 
+        with open("monitoring_log.json", "a") as f:
+            f.write(json.dumps(log_data) + "\n")
+
+        # -----------------------------
+        # App Logging
+        # -----------------------------
+        logging.info(f"SUCCESS | Input: {request.dict()} | Prediction: {rounded_price}")
+
+        return response
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.error(f"ERROR | Input: {request.dict()} | Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Prediction failed")

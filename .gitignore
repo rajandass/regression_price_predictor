@@ -24,3 +24,6 @@ house-price-dataset-of-india/
 # OS
 .DS_Store
 Thumbs.db
+
+app.log
+monitoring_log.json
